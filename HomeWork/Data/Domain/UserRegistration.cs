@@ -14,5 +14,6 @@ namespace HomeWork.Data.Domain
         [Required]
         [MaxLength(50)]
         public string PhoneNumber { get; set; }
+        public virtual ICollection<DoctorDentalProcedure>? DoctorDentalProcedure { get; set; }
     }
 }

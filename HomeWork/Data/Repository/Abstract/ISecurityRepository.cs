@@ -9,5 +9,6 @@ namespace HomeWork.Data.Repository.Abstract
         Task<IdentityResult> SignInAsync(RegistrationDto registrationData);
         Task<LoginInformationDto> LogInAsync(LoginDTO loginData);
         Task<string> LogOutAsync();
+        Task<string> RegisterDoctorAsync(DoctorDto model);
     }
 }

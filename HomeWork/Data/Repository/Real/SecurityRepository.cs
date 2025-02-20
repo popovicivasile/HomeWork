@@ -2,6 +2,7 @@
 using HomeWork.Data.Repository.Abstract;
 using HomeWork.Models.Users;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -76,6 +77,45 @@ namespace HomeWork.Data.Repository.Real
             return "Logout successful";
         }
 
+
+        public async Task<string> RegisterDoctorAsync(DoctorDto model)
+        {
+            try
+            {
+                var user = new UserRegistration
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UserName = model.UserName,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    PhoneNumber = model.PhoneNumber
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                var userId = user.Id;
+
+                List<Guid> RefProcedure = model.RefDentalProcedureId;
+
+                foreach (var refProcedureId in RefProcedure)
+                {
+                    DoctorDentalProcedure doctorDentalProcedure = new DoctorDentalProcedure
+                    {
+                        UserId = Guid.Parse(userId),
+                        RefDentalProcedureId = refProcedureId
+                    };
+                    _dbContext.DoctorDentalProcedures.Add(doctorDentalProcedure);
+                }
+                await _dbContext.SaveChangesAsync();
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+            return "Doctor registered successfully";
+        }
         public async Task<string> GenerateJwtTokenAsync(UserRegistration user)
         {
             var claims = new List<Claim>

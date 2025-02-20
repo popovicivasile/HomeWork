@@ -1,9 +1,6 @@
-﻿using HomeWork.Data.Domain;
-using HomeWork.Data.Repository.Abstract;
+﻿using HomeWork.Data.Repository.Abstract;
 using HomeWork.Models.Users;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HomeWork.Controllers
@@ -60,7 +57,24 @@ namespace HomeWork.Controllers
             return Ok(message);
         }
 
+        [HttpPost("register/medicalprofessional")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RegisterDoctor(DoctorDto model)
+        {
+            if (model == null)
+            {
+                return BadRequest("Invalid request data.");
+            }
 
+            var result = await _securityRepository.RegisterDoctorAsync(model);
+
+            if (result == null)
+            {
+                return BadRequest("Doctor registration failed.");
+            }
+
+            return Ok(result);
+        }
 
     }
 }

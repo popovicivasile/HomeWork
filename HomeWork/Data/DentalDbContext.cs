@@ -9,9 +9,9 @@ namespace HomeWork.Data
     public class DentalDbContext : IdentityDbContext<UserRegistration>
     {
         public DbSet<UserRegistration> Users { get; set; }
-        public DbSet<Doctor> Doctors { get; set; }
         public DbSet<RefDentalProcedures> RefDentalProcedures { get; set; }
         public DbSet<IdentityRole> Roles { get; set; }
+        public DbSet<DoctorDentalProcedure> DoctorDentalProcedures { get; set; }
 
 
         public DentalDbContext(DbContextOptions<DentalDbContext> options)

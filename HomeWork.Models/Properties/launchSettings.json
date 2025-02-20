@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "HomeWork.Models": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
