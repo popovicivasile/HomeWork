@@ -2,6 +2,7 @@ using HomeWork.Data;
 using HomeWork.Data.Domain;
 using HomeWork.Data.Repository.Abstract;
 using HomeWork.Data.Repository.Real;
+using HomeWork.Data.ServicesCall;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,7 @@ builder.Services.AddDbContext<DentalDbContext>(opt => opt.UseSqlServer(configura
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<ISecurityRepository, SecurityRepository>();
+builder.Services.AddScoped<MailService>();
 builder.Services.AddIdentity<UserRegistration, IdentityRole>(
                 options =>
                 {
