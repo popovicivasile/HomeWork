@@ -1,5 +1,7 @@
 using HomeWork.Data;
 using HomeWork.Data.Domain;
+using HomeWork.Data.Repository.Abstract;
+using HomeWork.Data.Repository.Real;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +21,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<DentalDbContext>(opt => opt.UseSqlServer(configuration.GetConnectionString("DbConnection")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddTransient<ISecurityRepository, SecurityRepository>();
 builder.Services.AddIdentity<UserRegistration, IdentityRole>(
                 options =>
                 {

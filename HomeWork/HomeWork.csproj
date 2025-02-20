@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
+    <ProjectReference Include="..\HomeWork.Models\HomeWork.Models.csproj" />
   </ItemGroup>
 
 </Project>
