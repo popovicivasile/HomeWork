@@ -93,7 +93,7 @@ namespace HomeWork.Data.Repository.Real
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
-
+                await _userManager.AddToRoleAsync(user, "MedicalProfessional");
                 var userId = user.Id;
 
                 List<Guid> RefProcedure = model.RefDentalProcedureId;
@@ -115,6 +115,12 @@ namespace HomeWork.Data.Repository.Real
                 throw new Exception(ex.Message);
             }
             return "Doctor registered successfully";
+        }
+
+
+        public async Task SendConfirmationEmailAsync(string email, string token)
+        {
+
         }
         public async Task<string> GenerateJwtTokenAsync(UserRegistration user)
         {
