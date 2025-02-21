@@ -1,3 +1,4 @@
+using HomeWork.Core.TimeJobs;
 using HomeWork.Data;
 using HomeWork.Data.Domain;
 using HomeWork.Data.Repository.Abstract;
@@ -49,7 +50,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddTransient<ISecurityRepository, SecurityRepository>();
+builder.Services.AddTransient<JobFactory>();
 builder.Services.AddScoped<MailService>();
+builder.Services.AddScoped<SendAppointmentReminder>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
