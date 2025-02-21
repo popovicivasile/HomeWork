@@ -8,11 +8,11 @@ namespace HomeWork.Data.Domain
         [Key]
         public Guid Id { get; set; }
         [Required]
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
         public UserRegistration User { get; set; }
         [Required]
         public Guid RefDentalProcedureId { get; set; }
-        public virtual RefDentalProcedures RefDentalProcedure { get; set; } 
+        public RefDentalProcedures RefDentalProcedure { get; set; }
     }
 
 }

@@ -27,9 +27,10 @@ namespace HomeWork.Data.Repository.Real
 
         public async Task<IdentityResult> SignInAsync(RegistrationDto registrationData)
         {
+            await using var transactionAo = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-
+                
                 var user = new UserRegistration
                 {
                     UserName = registrationData.UserName,
@@ -38,15 +39,45 @@ namespace HomeWork.Data.Repository.Real
                     LastName = registrationData.LastName,
                     PhoneNumber = registrationData.PhoneNumber
                 };
+
                 var result = await _userManager.CreateAsync(user, registrationData.Password);
+                if (!result.Succeeded)
+                {
+                    return result;
+                }
+
                 await _userManager.AddToRoleAsync(user, "Patient");
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var confirmationLink = $"https://yourwebsite.com/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+                MailService _emailService = new MailService(config);
+                await _emailService.SendAsync(user.Email, "Confirm Your Email",
+                    $"Please confirm your email by clicking {confirmationLink} ");
+                await transactionAo.CommitAsync();
                 return result;
             }
             catch (Exception ex)
             {
+                await transactionAo.RollbackAsync();
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<IdentityResult> ConfirmEmailAsync(string userId, string token)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Invalid confirmation request." });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "User not found." });
+            }
+
+            return await _userManager.ConfirmEmailAsync(user, token);
+        }
+
 
         public async Task<LoginInformationDto> LogInAsync(LoginDTO loginData)
         {
@@ -93,7 +124,7 @@ namespace HomeWork.Data.Repository.Real
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
-                await _userManager.AddToRoleAsync(user, "MedicalProfessional");
+                await _userManager.AddToRoleAsync(user, "Doctor");
                 var userId = user.Id;
 
                 List<Guid> RefProcedure = model.RefDentalProcedureId;
@@ -102,7 +133,7 @@ namespace HomeWork.Data.Repository.Real
                 {
                     DoctorDentalProcedure doctorDentalProcedure = new DoctorDentalProcedure
                     {
-                        UserId = Guid.Parse(userId),
+                        UserId = userId,
                         RefDentalProcedureId = refProcedureId
                     };
                     _dbContext.DoctorDentalProcedures.Add(doctorDentalProcedure);
@@ -118,10 +149,7 @@ namespace HomeWork.Data.Repository.Real
         }
 
 
-        public async Task SendConfirmationEmailAsync(string email, string token)
-        {
-
-        }
+     
         public async Task<string> GenerateJwtTokenAsync(UserRegistration user)
         {
             var claims = new List<Claim>

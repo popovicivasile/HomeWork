@@ -1,17 +1,24 @@
 ﻿using System.Net.Mail;
 using System.Net;
 
-namespace HomeWork.Data.ServicesCall
+public class MailService
 {
-    public class MailService
-    {
-        public async Task SendAsync(string Address, string subject, string content)
-        {
-            var fromAddress = new MailAddress("agstarnet@gmail.com", "From Name");
-            var toAddress = new MailAddress(Address, "To Name");
-            const string fromPassword = "RTKrtk!23";
+    private readonly IConfiguration _config;
 
-            var smtp = new SmtpClient
+    public MailService(IConfiguration config)
+    {
+        _config = config;
+    }
+
+    public async Task SendAsync(string address, string subject, string content)
+    {
+        try
+        {
+            var fromAddress = new MailAddress(_config["Email:FromAddress"], "From Name");
+            var toAddress = new MailAddress(address, "To Name");
+            var fromPassword = _config["Email:Password"];
+
+            using var smtp = new SmtpClient
             {
                 Host = "smtp.gmail.com",
                 Port = 587,
@@ -20,14 +27,18 @@ namespace HomeWork.Data.ServicesCall
                 UseDefaultCredentials = false,
                 Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
             };
-            using (var message = new MailMessage(fromAddress, toAddress)
+
+            using var message = new MailMessage(fromAddress, toAddress)
             {
                 Subject = subject,
                 Body = content
-            })
-            {
-                await smtp.SendMailAsync(message);
-            }
+            };
+
+            await smtp.SendMailAsync(message);
+        }
+        catch (SmtpException ex)
+        {
+            throw new Exception($"Failed to send email: {ex.Message}", ex);
         }
     }
 }

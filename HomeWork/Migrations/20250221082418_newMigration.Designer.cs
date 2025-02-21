@@ -4,6 +4,7 @@ using HomeWork.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeWork.Migrations
 {
     [DbContext(typeof(DentalDbContext))]
-    partial class DentalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250221082418_newMigration")]
+    partial class newMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,49 +50,6 @@ namespace HomeWork.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("DoctorDentalProcedures");
-                });
-
-            modelBuilder.Entity("HomeWork.Data.Domain.ProcedureRegistrationCard", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("AppointmentTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<string>("DoctorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PatientId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("ProcedureId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("Pending");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("PatientId");
-
-                    b.HasIndex("ProcedureId");
-
-                    b.ToTable("ProcedureRegistrationCards");
                 });
 
             modelBuilder.Entity("HomeWork.Data.Domain.UserRegistration", b =>
@@ -173,20 +133,20 @@ namespace HomeWork.Migrations
                         {
                             Id = "1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "aab7b6cd-5701-49ce-921f-21c63d58bd43",
-                            Email = "superuser@gmail.com",
+                            ConcurrencyStamp = "937de724-6de5-41c8-9187-a155079c94f8",
+                            Email = "TemporaryEmail@example.com",
                             EmailConfirmed = true,
-                            FirstName = "Super",
-                            LastName = "User",
+                            FirstName = "Temporary first Name",
+                            LastName = "Temporary last Name",
                             LockoutEnabled = false,
-                            NormalizedEmail = "SUPERUSER@GMAIL.COM",
-                            NormalizedUserName = "SUPERUSER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMZiqYlPTm4eLaX/aUU83NdMeiet32tsTH5XuDKPdPwkQ2mnvDy1AIJ+59c5tpvCKg==",
+                            NormalizedEmail = "TEMPORARYEMAIL@EXAMPLE.COM",
+                            NormalizedUserName = "TEMPORARY-USERNAME",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGPrngkGQK7hgJJFn2Cdw6M5RJS2UFpTPqzhI4QGzE+phbhvnzZvBipPfI7huUUbaw==",
                             PhoneNumber = "1234567890",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "",
                             TwoFactorEnabled = false,
-                            UserName = "SuperUser"
+                            UserName = "TemporaryUsername"
                         });
                 });
 
@@ -196,9 +156,6 @@ namespace HomeWork.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("DurationInMinutes")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -207,38 +164,6 @@ namespace HomeWork.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RefDentalProcedures");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("7e2c1e72-ba23-4ec9-bde2-908fcae2c92c"),
-                            DurationInMinutes = 30,
-                            Name = "A"
-                        },
-                        new
-                        {
-                            Id = new Guid("a480a76b-d78e-4808-bd22-1bc5b3b4f31d"),
-                            DurationInMinutes = 45,
-                            Name = "B"
-                        },
-                        new
-                        {
-                            Id = new Guid("cafb8d58-b8ba-4459-a705-b78a4593be8b"),
-                            DurationInMinutes = 60,
-                            Name = "C"
-                        },
-                        new
-                        {
-                            Id = new Guid("47fb8ba9-a62b-4fa1-b6f8-259c22ce3285"),
-                            DurationInMinutes = 20,
-                            Name = "D"
-                        },
-                        new
-                        {
-                            Id = new Guid("c2aff016-0a65-4849-9fc4-bbf5e0435868"),
-                            DurationInMinutes = 40,
-                            Name = "E"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -277,8 +202,8 @@ namespace HomeWork.Migrations
                         new
                         {
                             Id = "2",
-                            Name = "Doctor",
-                            NormalizedName = "DOCTOR"
+                            Name = "MedicalProfessional",
+                            NormalizedName = "MEDICALPROFESSIONAL"
                         },
                         new
                         {
@@ -424,33 +349,6 @@ namespace HomeWork.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("HomeWork.Data.Domain.ProcedureRegistrationCard", b =>
-                {
-                    b.HasOne("HomeWork.Data.Domain.UserRegistration", "Doctor")
-                        .WithMany("DoctorAppointments")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HomeWork.Data.Domain.UserRegistration", "Patient")
-                        .WithMany("PatientAppointments")
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HomeWork.Data.Domain.ValueObjects.RefDentalProcedures", "Procedure")
-                        .WithMany("ProcedureRegistrations")
-                        .HasForeignKey("ProcedureId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("Patient");
-
-                    b.Navigation("Procedure");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -504,18 +402,12 @@ namespace HomeWork.Migrations
 
             modelBuilder.Entity("HomeWork.Data.Domain.UserRegistration", b =>
                 {
-                    b.Navigation("DoctorAppointments");
-
                     b.Navigation("DoctorDentalProcedure");
-
-                    b.Navigation("PatientAppointments");
                 });
 
             modelBuilder.Entity("HomeWork.Data.Domain.ValueObjects.RefDentalProcedures", b =>
                 {
                     b.Navigation("DoctorDentalProcedures");
-
-                    b.Navigation("ProcedureRegistrations");
                 });
 #pragma warning restore 612, 618
         }

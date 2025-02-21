@@ -31,7 +31,17 @@ namespace HomeWork.Controllers
             return BadRequest(ModelState);
         }
 
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            var result = await _securityRepository.ConfirmEmailAsync(userId, token);
+            if (result.Succeeded)
+            {
+                return Ok("Email confirmed successfully.");
+            }
 
+            return BadRequest(result.Errors);
+        }
 
 
         [HttpPost("login")]

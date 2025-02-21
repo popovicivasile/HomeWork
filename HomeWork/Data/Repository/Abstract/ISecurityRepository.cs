@@ -7,6 +7,7 @@ namespace HomeWork.Data.Repository.Abstract
     public interface ISecurityRepository
     {
         Task<IdentityResult> SignInAsync(RegistrationDto registrationData);
+        Task<IdentityResult> ConfirmEmailAsync(string userId, string token);
         Task<LoginInformationDto> LogInAsync(LoginDTO loginData);
         Task<string> LogOutAsync();
         Task<string> RegisterDoctorAsync(DoctorDto model);
