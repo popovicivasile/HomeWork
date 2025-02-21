@@ -12,5 +12,8 @@ namespace HomeWork.Models.Booking
         public string ProcedureName { get; set; }
         public int AppointmentCount { get; set; }
         public int TotalDuration { get; set; }
+        public int CancelledCount { get; set; }
+        public DateTimeOffset PeriodStart { get; set; }
+        public DateTimeOffset PeriodEnd { get; set; }
     }
 }

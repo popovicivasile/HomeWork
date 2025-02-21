@@ -24,9 +24,10 @@ namespace HomeWork.Data.EntityConfigurations
                 .WithMany(p => p.ProcedureRegistrations)
                 .HasForeignKey(prc => prc.ProcedureId);
 
-            builder.Property(prc => prc.Status)
-                .HasMaxLength(50)
-                .HasDefaultValue("Pending");
+            builder.HasOne(prc => prc.Status)
+                .WithMany()
+                .HasForeignKey(prc => prc.StatusId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.Property(prc => prc.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");

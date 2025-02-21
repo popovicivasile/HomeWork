@@ -13,8 +13,7 @@ namespace HomeWork.Data.Repository.Abstract
         Task<List<UserRegistration>> GetAvailableDoctorsAsync(Guid procedureId, DateTime appointmentTime);
         Task<string> BookAppointmentAsync(BookingDto bookingDto, string patientId);
         Task<List<ProcedureRegistrationCard>> GetAllBookingsAsync(string searchTerm = null, string sortBy = "AppointmentTime");
-        Task<List<BookingStatsDto>> GetBookingStatsAsync(
-            string doctorId = null, Guid? procedureId = null, DateTime? startDate = null, DateTime? endDate = null);
+        Task<List<BookingStatsDto>> GetBookingStatsAsync(string doctorId, DateTimeOffset startDate, DateTimeOffset endDate, Guid procedureId);
         Task SendAppointmentRemindersAsync();
     }
 }

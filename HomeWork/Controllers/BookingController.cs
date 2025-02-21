@@ -19,9 +19,7 @@ namespace HomeWork.Controllers
             _bookingRepository = bookingRepository ?? throw new ArgumentNullException(nameof(bookingRepository));
         }
 
-        /// <summary>
-        /// Gets all available dental procedures.
-        /// </summary>
+ 
         [HttpGet("procedures")]
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> GetAllProcedures()
@@ -37,9 +35,7 @@ namespace HomeWork.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets available doctors for a specific procedure and time.
-        /// </summary>
+  
         [HttpGet("doctors")]
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> GetAvailableDoctors([FromQuery] Guid procedureId, [FromQuery] DateTime appointmentTime)
@@ -60,9 +56,6 @@ namespace HomeWork.Controllers
             }
         }
 
-        /// <summary>
-        /// Books an appointment for the authenticated patient.
-        /// </summary>
         [HttpPost("book")]
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> BookAppointment([FromBody] BookingDto bookingDto)
@@ -89,9 +82,7 @@ namespace HomeWork.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets all bookings for admin with optional search and sort.
-        /// </summary>
+      
         [HttpGet("admin/bookings")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllBookings(
@@ -109,20 +100,18 @@ namespace HomeWork.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets booking statistics for admin with optional filters.
-        /// </summary>
+     
         [HttpGet("admin/stats")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetBookingStats(
-            [FromQuery] string doctorId = null,
-            [FromQuery] Guid? procedureId = null,
-            [FromQuery] DateTime? startDate = null,
-            [FromQuery] DateTime? endDate = null)
+            [FromQuery] string doctorId,
+            [FromQuery] Guid procedureId,
+            [FromQuery] DateTimeOffset startDate,
+            [FromQuery] DateTimeOffset endDate)
         {
             try
             {
-                var stats = await _bookingRepository.GetBookingStatsAsync(doctorId, procedureId, startDate, endDate);
+                var stats = await _bookingRepository.GetBookingStatsAsync(doctorId, startDate, endDate, procedureId);
                 return Ok(stats);
             }
             catch (Exception ex)
@@ -131,9 +120,6 @@ namespace HomeWork.Controllers
             }
         }
 
-        /// <summary>
-        /// Manually triggers sending appointment reminders (for testing or admin purposes).
-        /// </summary>
         [HttpPost("admin/send-reminders")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> SendAppointmentReminders()

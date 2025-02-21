@@ -22,14 +22,19 @@ namespace HomeWork.Data
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(DentalDbContext).Assembly);
 
-            // Seed roles
             modelBuilder.Entity<IdentityRole>().HasData(SeedRoles());
             modelBuilder.Entity<UserRegistration>().HasData(SeedSuperAdmin());
             modelBuilder.Entity<IdentityUserRole<string>>().HasData(
                 new IdentityUserRole<string> { RoleId = "1", UserId = "1" }
             );
 
-            // Seed procedures
+            modelBuilder.Entity<RefStatusType>().HasData(
+                new RefStatusType { Id = Guid.NewGuid(), Name = "Confirmed" },
+                new RefStatusType { Id = Guid.NewGuid(), Name = "Pending" },
+                new RefStatusType { Id = Guid.NewGuid(), Name = "Cancelled" }
+                );
+
+
             modelBuilder.Entity<RefDentalProcedures>().HasData(
                 new RefDentalProcedures { Id = Guid.NewGuid(), Name = "A", DurationInMinutes = 30 },
                 new RefDentalProcedures { Id = Guid.NewGuid(), Name = "B", DurationInMinutes = 45 },

@@ -1,4 +1,6 @@
-﻿using HomeWork.Data;
+﻿using HomeWork.Core.RefStaticList;
+using HomeWork.Data;
+using HomeWork.Data.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
@@ -23,7 +25,7 @@ namespace HomeWork.Core.TimeJobs
                     MailService mailService = new MailService(config);
                     var tomorrow = DateTime.UtcNow.AddDays(1).Date;
                     var appointments = await _dbContext.ProcedureRegistrationCards
-                        .Where(prc => prc.AppointmentTime.Date == tomorrow && prc.Status == "Confirmed")
+                        .Where(prc => prc.AppointmentTime.Date == tomorrow && prc.StatusId == Guid.Parse(RefStatusTypeList.Confirmed))
                         .Include(prc => prc.Patient)
                         .Include(prc => prc.Doctor)
                         .Include(prc => prc.Procedure)

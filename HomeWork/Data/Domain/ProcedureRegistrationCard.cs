@@ -11,21 +11,21 @@ namespace HomeWork.Data.Domain
 
         [Required]
         public string PatientId { get; set; }
-        public UserRegistration Patient { get; set; }
+        public virtual UserRegistration Patient { get; set; }
 
         [Required]
         public string DoctorId { get; set; }
-        public UserRegistration Doctor { get; set; }
+        public virtual UserRegistration Doctor { get; set; }
 
         [Required]
         public Guid ProcedureId { get; set; }
-        public RefDentalProcedures Procedure { get; set; }
+        public virtual RefDentalProcedures Procedure { get; set; }
 
         [Required]
         public DateTime AppointmentTime { get; set; }
 
-        [MaxLength(50)]
-        public string Status { get; set; } = "Pending";
+        public Guid? StatusId { get; set; }
+        public virtual RefStatusType Status { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

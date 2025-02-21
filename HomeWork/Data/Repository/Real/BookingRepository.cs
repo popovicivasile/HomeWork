@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HomeWork.Models.Booking;
 using HomeWork.Data.Repository.Abstract;
+using HomeWork.Core.RefStaticList;
 
 namespace HomeWork.Data.Repository.Real
 {
@@ -44,7 +45,7 @@ namespace HomeWork.Data.Repository.Real
                 .ToListAsync();
 
             var bookedDoctorIds = await _dbContext.ProcedureRegistrationCards
-                .Where(prc => prc.AppointmentTime == appointmentTime && prc.Status != "Cancelled")
+                .Where(prc => prc.AppointmentTime == appointmentTime && prc.StatusId != Guid.Parse(RefStatusTypeList.Cancelled))
                 .Select(prc => prc.DoctorId)
                 .ToListAsync();
 
@@ -71,7 +72,7 @@ namespace HomeWork.Data.Repository.Real
                     DoctorId = bookingDto.DoctorId,
                     ProcedureId = bookingDto.ProcedureId,
                     AppointmentTime = bookingDto.AppointmentTime,
-                    Status = "Confirmed"
+                    StatusId = Guid.Parse(RefStatusTypeList.Confirmed)
                 };
 
                 _dbContext.ProcedureRegistrationCards.Add(appointment);
@@ -99,6 +100,7 @@ namespace HomeWork.Data.Repository.Real
         public async Task<List<ProcedureRegistrationCard>> GetAllBookingsAsync(string searchTerm = null, string sortBy = "AppointmentTime")
         {
             var query = _dbContext.ProcedureRegistrationCards
+
                 .Include(prc => prc.Patient)
                 .Include(prc => prc.Doctor)
                 .Include(prc => prc.Procedure)
@@ -123,41 +125,52 @@ namespace HomeWork.Data.Repository.Real
             return await query.ToListAsync();
         }
 
-        public async Task<List<BookingStatsDto>> GetBookingStatsAsync(
-            string doctorId = null, Guid? procedureId = null, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<List<BookingStatsDto>> GetBookingStatsAsync(string doctorId, DateTimeOffset startDate, DateTimeOffset endDate ,Guid procedureId)
         {
-            var query = _dbContext.ProcedureRegistrationCards
+            List<BookingStatsDto> result = new List<BookingStatsDto>();
+            try
+            {
+                var query = await _dbContext.ProcedureRegistrationCards
                 .Include(prc => prc.Doctor)
                 .Include(prc => prc.Procedure)
-                .Where(prc => prc.Status == "Confirmed")
-                .AsQueryable();
+                .Where(s => s.Doctor.Id == doctorId && s.Procedure.Id == procedureId &&
+                s.AppointmentTime >= startDate && s.AppointmentTime <= endDate)
+                .GroupBy(s => new { s.DoctorId, s.ProcedureId }).ToListAsync();
 
-            if (!string.IsNullOrEmpty(doctorId))
-                query = query.Where(prc => prc.DoctorId == doctorId);
-            if (procedureId.HasValue)
-                query = query.Where(prc => prc.ProcedureId == procedureId.Value);
-            if (startDate.HasValue)
-                query = query.Where(prc => prc.AppointmentTime >= startDate.Value);
-            if (endDate.HasValue)
-                query = query.Where(prc => prc.AppointmentTime <= endDate.Value);
-
-            return await query
-                .GroupBy(prc => new { prc.DoctorId, prc.ProcedureId })
-                .Select(g => new BookingStatsDto
+                if (query != null)
                 {
-                    DoctorName = g.First().Doctor.FirstName + " " + g.First().Doctor.LastName,
-                    ProcedureName = g.First().Procedure.Name,
-                    AppointmentCount = g.Count(),
-                    TotalDuration = g.Sum(prc => prc.Procedure.DurationInMinutes)
-                })
-                .ToListAsync();
+                    result = query.Select(s => new BookingStatsDto
+                    {
+                        DoctorName = s.First().Doctor.FirstName + " " + s.First().Doctor.LastName,
+                        ProcedureName = s.First().Procedure.Name,
+                        AppointmentCount = s.Count(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed)),
+                        TotalDuration = s.Sum(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed) ? t.Procedure.DurationInMinutes : 0),
+                        CancelledCount = s.Count(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed)),
+                        PeriodStart = startDate,
+                        PeriodEnd = endDate,
+
+                    }).ToList();
+
+                }
+                else
+                {
+                    return result;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to get booking stats: {ex.Message}");
+            }
+            return result;
+
         }
 
         public async Task SendAppointmentRemindersAsync()
         {
             var tomorrow = DateTime.UtcNow.AddDays(1).Date;
             var appointments = await _dbContext.ProcedureRegistrationCards
-                .Where(prc => prc.AppointmentTime.Date == tomorrow && prc.Status == "Confirmed")
+                .Where(prc => prc.AppointmentTime.Date == tomorrow && prc.StatusId == Guid.Parse(RefStatusTypeList.Confirmed))
                 .Include(prc => prc.Patient)
                 .Include(prc => prc.Doctor)
                 .Include(prc => prc.Procedure)
