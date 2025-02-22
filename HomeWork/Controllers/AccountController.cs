@@ -69,7 +69,7 @@ namespace HomeWork.Controllers
             return Ok(message);
         }
 
-        [HttpPost("register/medicalprofessional")]
+        [HttpPost("register/doctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterDoctor(DoctorDto model)
         {
