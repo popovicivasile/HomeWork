@@ -74,7 +74,7 @@ namespace HomeWork.Controllers
                 }
 
                 var result = await _bookingRepository.BookAppointmentAsync(bookingDto, patientId);
-                return Ok(new { Message = result });
+                return Ok(result);
             }
             catch (Exception ex)
             {

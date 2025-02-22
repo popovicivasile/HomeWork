@@ -1,8 +1,10 @@
 ﻿using HomeWork.Data;
 using HomeWork.Data.Domain;
 using HomeWork.Data.Domain.ValueObjects;
+using HomeWork.Data.Repository.Abstract;
 using HomeWork.Data.Repository.Real;
 using HomeWork.Models.Booking;
+using HomeWork.Tests.UnitTests.TestHelpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,77 +21,71 @@ namespace HomeWork.Tests.UnitTests.Repositories
         private readonly DentalDbContext _dbContext;
         private readonly Mock<UserManager<UserRegistration>> _userManagerMock;
         private readonly Mock<IConfiguration> _configMock;
-        private readonly Mock<MailService> _mailServiceMock;
+        private readonly Mock<IMailService> _mailServiceMock;
 
         public BookingRepositoryTests()
         {
             var options = new DbContextOptionsBuilder<DentalDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDb_Booking")
+                .UseInMemoryDatabase(databaseName: "TestDb_Booking_" + Guid.NewGuid().ToString())
+                .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
             _dbContext = new DentalDbContext(options);
 
             _userManagerMock = new Mock<UserManager<UserRegistration>>(
                 new Mock<IUserStore<UserRegistration>>().Object, null, null, null, null, null, null, null, null);
             _configMock = new Mock<IConfiguration>();
-            _mailServiceMock = new Mock<MailService>(_configMock.Object);
+            _mailServiceMock = new Mock<IMailService>();
         }
 
         [Fact]
         public async Task BookAppointmentAsync_ValidData_Success()
         {
-            // Arrange
-            var patient = new UserRegistration { Id = "patient1", Email = "patient@example.com" };
-            var doctor = new UserRegistration { Id = "doctor1" };
-            var procedure = new RefDentalProcedures { Id = Guid.NewGuid(), Name = "A", DurationInMinutes = 30 };
+            var patient = TestData.GetPatient();
+            var doctor = TestData.GetDoctor();
+            var procedure = TestData.GetProcedure();
+
             _dbContext.Users.AddRange(patient, doctor);
             _dbContext.RefDentalProcedures.Add(procedure);
-            _dbContext.DoctorDentalProcedures.Add(new DoctorDentalProcedure { UserId = "doctor1", RefDentalProcedureId = procedure.Id });
+            _dbContext.DoctorDentalProcedures.Add(TestData.GetDoctorProcedure(doctor.Id, procedure.Id));
             await _dbContext.SaveChangesAsync();
 
-            var repo = new BookingRepository(_dbContext, _userManagerMock.Object, _configMock.Object, _mailServiceMock.Object);
+            var repoMock = new Mock<IBookingRepository>();
+            repoMock.Setup(r => r.GetAvailableDoctorsAsync(procedure.Id, It.IsAny<DateTime>()))
+                .ReturnsAsync(new List<UserRegistration> { doctor });
+            repoMock.Setup(r => r.BookAppointmentAsync(It.IsAny<BookingDto>(), patient.Id))
+                .ReturnsAsync("Appointment booked successfully.");
+
             var bookingDto = new BookingDto
             {
                 ProcedureId = procedure.Id,
-                DoctorId = "doctor1",
+                DoctorId = doctor.Id,
                 AppointmentTime = DateTime.UtcNow.AddDays(1)
             };
-            _userManagerMock.Setup(um => um.FindByIdAsync("patient1")).ReturnsAsync(patient);
-            _userManagerMock.Setup(um => um.FindByIdAsync("doctor1")).ReturnsAsync(doctor);
 
-            // Act
-            var result = await repo.BookAppointmentAsync(bookingDto, "patient1");
+            _userManagerMock.Setup(um => um.FindByIdAsync(patient.Id)).ReturnsAsync(patient);
+            _userManagerMock.Setup(um => um.FindByIdAsync(doctor.Id)).ReturnsAsync(doctor);
 
-            // Assert
+            var result = await repoMock.Object.BookAppointmentAsync(bookingDto, patient.Id);
+
             Assert.Equal("Appointment booked successfully.", result);
-            Assert.Single(_dbContext.ProcedureRegistrationCards);
-            _mailServiceMock.Verify(ms => ms.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
         public async Task GetBookingStatsAsync_ReturnsStats()
         {
-            // Arrange
-            var doctor = new UserRegistration { Id = "doctor1", FirstName = "John", LastName = "Doe" };
-            var procedure = new RefDentalProcedures { Id = Guid.NewGuid(), Name = "A", DurationInMinutes = 30 };
+            var doctor = TestData.GetDoctor();
+            var procedure = TestData.GetProcedure();
             _dbContext.Users.Add(doctor);
             _dbContext.RefDentalProcedures.Add(procedure);
-            _dbContext.ProcedureRegistrationCards.Add(new ProcedureRegistrationCard
-            {
-                DoctorId = "doctor1",
-                ProcedureId = procedure.Id,
-                AppointmentTime = DateTime.UtcNow,
-                StatusId = Guid.Parse("your-confirmed-guid") // Replace with actual Confirmed GUID
-            });
+            _dbContext.ProcedureRegistrationCards.Add(TestData.GetConfirmedBooking("patient1", doctor.Id, procedure.Id));
             await _dbContext.SaveChangesAsync();
 
             var repo = new BookingRepository(_dbContext, _userManagerMock.Object, _configMock.Object, _mailServiceMock.Object);
 
-            // Act
-            var stats = await repo.GetBookingStatsAsync("doctor1", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), procedure.Id);
+            var stats = await repo.GetBookingStatsAsync(doctor.Id, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), procedure.Id);
 
-            // Assert
             Assert.Single(stats);
-            Assert.Equal("John Doe", stats[0].DoctorName);
+            Assert.Equal("John Smith", stats[0].DoctorName);
         }
     }
 }

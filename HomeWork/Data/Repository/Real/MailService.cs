@@ -1,7 +1,8 @@
 ﻿using System.Net.Mail;
 using System.Net;
+using HomeWork.Data.Repository.Abstract;
 
-public class MailService
+public class MailService : IMailService
 {
     private readonly IConfiguration _config;
 

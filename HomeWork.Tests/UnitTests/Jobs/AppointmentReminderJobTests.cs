@@ -2,13 +2,13 @@
 using HomeWork.Core.TimeJobs;
 using HomeWork.Data;
 using HomeWork.Data.Domain;
+using HomeWork.Data.Domain.ValueObjects;
+using HomeWork.Data.Repository.Abstract;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using System;
-using System.Threading.Tasks;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace HomeWork.Tests.UnitTests.Jobs
 {
@@ -18,35 +18,65 @@ namespace HomeWork.Tests.UnitTests.Jobs
         public async Task Execute_SendsRemindersForTomorrow()
         {
             var options = new DbContextOptionsBuilder<DentalDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDb_Job")
+                .UseInMemoryDatabase(databaseName: "TestDb_" + Guid.NewGuid().ToString())
                 .Options;
             var dbContext = new DentalDbContext(options);
+
+            var tomorrow = DateTime.UtcNow.AddDays(1).Date;
+            var patient = new UserRegistration
+            {
+                Email = "patient@example.com",
+                FirstName = "Jane",
+                LastName = "Doe",
+                PhoneNumber = "123-456-7890" 
+            };
+            var doctor = new UserRegistration
+            {
+                FirstName = "John",
+                LastName = "Smith",
+                PhoneNumber = "987-654-3210" 
+            };
+            var procedure = new RefDentalProcedures { Name = "Checkup" };
+
+            var appointment = new ProcedureRegistrationCard
+            {
+                Id = Guid.NewGuid(),
+                PatientId = "patient1",
+                Patient = patient,
+                DoctorId = "doctor1",
+                Doctor = doctor,
+                ProcedureId = Guid.NewGuid(),
+                Procedure = procedure,
+                AppointmentTime = tomorrow,
+                StatusId = Guid.Parse(RefStatusTypeList.Confirmed)
+            };
+
+            dbContext.ProcedureRegistrationCards.Add(appointment);
+            await dbContext.SaveChangesAsync();
+
+            var mailServiceMock = new Mock<IMailService>();
             var configMock = new Mock<IConfiguration>();
-            var mailService = new Mock<MailService>(configMock.Object);
+
+            var serviceProviderMock = new Mock<IServiceProvider>();
+            serviceProviderMock.Setup(sp => sp.GetService(typeof(IConfiguration))).Returns(configMock.Object);
+            serviceProviderMock.Setup(sp => sp.GetService(typeof(DentalDbContext))).Returns(dbContext);
+            serviceProviderMock.Setup(sp => sp.GetService(typeof(IMailService))).Returns(mailServiceMock.Object);
+
             var scopeMock = new Mock<IServiceScope>();
-            scopeMock.Setup(s => s.ServiceProvider.GetService(typeof(DentalDbContext))).Returns(dbContext);
-            scopeMock.Setup(s => s.ServiceProvider.GetService(typeof(IConfiguration))).Returns(configMock.Object);
-            scopeMock.Setup(s => s.ServiceProvider.GetService(typeof(MailService))).Returns(mailService.Object);
+            scopeMock.Setup(s => s.ServiceProvider).Returns(serviceProviderMock.Object);
 
             var scopeFactoryMock = new Mock<IServiceScopeFactory>();
             scopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
 
             var job = new SendAppointmentReminder(scopeFactoryMock.Object);
-            dbContext.ProcedureRegistrationCards.Add(new ProcedureRegistrationCard
-            {
-                PatientId = "1",
-                DoctorId = "2",
-                ProcedureId = Guid.NewGuid(),
-                AppointmentTime = DateTime.UtcNow.AddDays(1),
-                StatusId = Guid.Parse(RefStatusTypeList.Confirmed)
-            });
-            await dbContext.SaveChangesAsync();
 
-            // Act
             await job.Execute(null);
 
-            // Assert
-            mailService.Verify(ms => ms.SendAsync(It.IsAny<string>(), "Appointment Reminder", It.IsAny<string>()), Times.Once);
+            mailServiceMock.Verify(ms => ms.SendAsync(
+                "patient@example.com",
+                "Appointment Reminder",
+                It.Is<string>(body => body.Contains("Reminder:") && body.Contains("tomorrow"))),
+                Times.Once());
         }
     }
 }

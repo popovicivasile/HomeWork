@@ -25,10 +25,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="UnitTests\Helpers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\HomeWork.Models\HomeWork.Models.csproj" />
     <ProjectReference Include="..\HomeWork\HomeWork.csproj" />
   </ItemGroup>

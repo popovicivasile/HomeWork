@@ -34,15 +34,12 @@ namespace HomeWork.Tests.UnitTests.Repositories
         [Fact]
         public async Task GetAllDoctorsAsync_ReturnsDoctors()
         {
-            // Arrange
             var doctor = new UserRegistration { Id = "doctor1", UserName = "drtest" };
             _userManagerMock.Setup(um => um.GetUsersInRoleAsync("Doctor")).ReturnsAsync(new List<UserRegistration> { doctor });
             var repo = new AdminRepository(_dbContext, _userManagerMock.Object);
 
-            // Act
             var doctors = await repo.GetAllDoctorsAsync();
 
-            // Assert
             Assert.Single(doctors);
             Assert.Equal("drtest", doctors[0].UserName);
         }
@@ -50,14 +47,11 @@ namespace HomeWork.Tests.UnitTests.Repositories
         [Fact]
         public async Task CreateProcedureAsync_AddsProcedure()
         {
-            // Arrange
             var repo = new AdminRepository(_dbContext, _userManagerMock.Object);
             var procedureDto = new ProcedureDto { Name = "TestProc", DurationInMinutes = 45 };
 
-            // Act
             var procedure = await repo.CreateProcedureAsync(procedureDto);
 
-            // Assert
             Assert.Equal("TestProc", procedure.Name);
             Assert.Equal(45, procedure.DurationInMinutes);
             Assert.Single(_dbContext.RefDentalProcedures);

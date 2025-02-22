@@ -1,11 +1,15 @@
 ﻿using HomeWork.Controllers;
+using HomeWork.Core.RefStaticList;
 using HomeWork.Data.Domain.ValueObjects;
 using HomeWork.Data.Repository.Abstract;
 using HomeWork.Models.Booking;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
+using System.Security.Cryptography.Xml;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,6 +24,15 @@ namespace HomeWork.Tests.UnitTests.Controllers
         {
             _bookingRepoMock = new Mock<IBookingRepository>();
             _controller = new BookingController(_bookingRepoMock.Object);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "patient1")
+            }, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
         }
 
         [Fact]
@@ -37,17 +50,25 @@ namespace HomeWork.Tests.UnitTests.Controllers
         [Fact]
         public async Task BookAppointment_ValidData_ReturnsOk()
         {
-            var bookingDto = new BookingDto { ProcedureId = Guid.NewGuid(), DoctorId = "1", AppointmentTime = DateTime.UtcNow };
+            var bookingDto = new BookingDto
+            {
+                ProcedureId = Guid.Parse(RefDentalProceduresList.C),
+                DoctorId = "1",
+                AppointmentTime = DateTime.UtcNow
+            };
+
             _bookingRepoMock.Setup(repo => repo.BookAppointmentAsync(bookingDto, "patient1"))
                 .ReturnsAsync("Appointment booked successfully.");
 
-            // Act
             var result = await _controller.BookAppointment(bookingDto);
 
-            // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            dynamic response = okResult.Value;
-            Assert.Equal("Appointment booked successfully.", response.Message);
+            var response = okResult.Value as string; 
+
+            Assert.NotNull(response);
+            Assert.Equal("Appointment booked successfully.", response);
         }
+
+
     }
 }

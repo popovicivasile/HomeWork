@@ -15,11 +15,13 @@ namespace HomeWork.Data.Repository.Real
         private readonly DentalDbContext _dbContext;
         private readonly UserManager<UserRegistration> _userManager;
         private readonly SignInManager<UserRegistration> _signInManager;
+        private readonly IMailService _emailService;
         private readonly IConfiguration config;
-        public SecurityRepository(DentalDbContext dbContext, IConfiguration config, UserManager<UserRegistration> userManager, SignInManager<UserRegistration> signInManager)
+        public SecurityRepository(DentalDbContext dbContext, IConfiguration config, UserManager<UserRegistration> userManager, SignInManager<UserRegistration> signInManager, IMailService mailService)
         {
             _dbContext = dbContext;
             _signInManager = signInManager;
+            _emailService = mailService;
             _userManager = userManager;
             this.config = config;
         }
@@ -30,7 +32,12 @@ namespace HomeWork.Data.Repository.Real
             await using var transactionAo = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                
+                if (registrationData == null)
+                    throw new ArgumentNullException(nameof(registrationData));
+
+                if (string.IsNullOrEmpty(registrationData.Email))
+                    throw new ArgumentException("Email cannot be null or empty", nameof(registrationData.Email));
+
                 var user = new UserRegistration
                 {
                     UserName = registrationData.UserName,
@@ -49,7 +56,6 @@ namespace HomeWork.Data.Repository.Real
                 await _userManager.AddToRoleAsync(user, "Patient");
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var confirmationLink = $"https://yourwebsite.com/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
-                MailService _emailService = new MailService(config);
                 await _emailService.SendAsync(user.Email, "Confirm Your Email",
                     $"Please confirm your email by clicking {confirmationLink} ");
                 await transactionAo.CommitAsync();
@@ -58,7 +64,7 @@ namespace HomeWork.Data.Repository.Real
             catch (Exception ex)
             {
                 await transactionAo.RollbackAsync();
-                throw new Exception(ex.Message);
+                throw new Exception("Failed to sign in user", ex);
             }
         }
 

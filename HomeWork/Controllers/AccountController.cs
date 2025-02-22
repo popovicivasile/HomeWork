@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HomeWork.Controllers
 {
-    [Route("api/core/[action]")]
+    [Route("api/core/account/[action]")]
     [ApiController]
     public class AccountController : Controller
     {
@@ -18,17 +18,20 @@ namespace HomeWork.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> SignIn(RegistrationDto model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                var result = await _securityRepository.SignInAsync(model);
-
-                if (result.Succeeded)
+                if (!ModelState.IsValid)
                 {
-                    return Ok(new { message = "Registration successful, now you can login" });
+                    return BadRequest(ModelState);
                 }
-                return BadRequest(new { errors = string.Join(", ", result.Errors.Select(e => e.Description)) });
+
+                var result = await _securityRepository.SignInAsync(model);
+                return result.Succeeded ? Ok(result) : BadRequest(result);
             }
-            return BadRequest(ModelState);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred during registration", Error = ex.Message });
+            }
         }
 
         [HttpGet("confirm-email")]

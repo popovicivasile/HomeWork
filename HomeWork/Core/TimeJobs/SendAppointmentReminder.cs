@@ -1,6 +1,7 @@
 ﻿using HomeWork.Core.RefStaticList;
 using HomeWork.Data;
 using HomeWork.Data.Domain.ValueObjects;
+using HomeWork.Data.Repository.Abstract;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
@@ -22,7 +23,7 @@ namespace HomeWork.Core.TimeJobs
                 {
                     var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                     var _dbContext = scope.ServiceProvider.GetRequiredService<DentalDbContext>();
-                    MailService mailService = new MailService(config);
+                    var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
                     var tomorrow = DateTime.UtcNow.AddDays(1).Date;
                     var appointments = await _dbContext.ProcedureRegistrationCards
                         .Where(prc => prc.AppointmentTime.Date == tomorrow && prc.StatusId == Guid.Parse(RefStatusTypeList.Confirmed))
@@ -43,7 +44,8 @@ namespace HomeWork.Core.TimeJobs
             {
                 Console.WriteLine(ex.Message);
             }
-
         }
+
     }
+    
 }

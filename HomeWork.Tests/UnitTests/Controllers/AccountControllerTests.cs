@@ -20,18 +20,30 @@ namespace HomeWork.Tests.UnitTests.Controllers
             _controller = new AccountController(_securityRepoMock.Object);
         }
 
+        
         [Fact]
         public async Task SignIn_ValidData_ReturnsOk()
         {
-            var registrationDto = new RegistrationDto { Email = "test@example.com", Password = "Pass123" };
-            _securityRepoMock.Setup(repo => repo.SignInAsync(registrationDto))
+            // Arrange
+            var securityRepoMock = new Mock<ISecurityRepository>();
+            securityRepoMock.Setup(repo => repo.SignInAsync(It.IsAny<RegistrationDto>()))
                 .ReturnsAsync(IdentityResult.Success);
+            var controller = new AccountController(securityRepoMock.Object);
+            var model = new RegistrationDto
+            {
+                UserName = "testuser",
+                Email = "test@example.com",
+                FirstName = "Test",
+                LastName = "User",
+                PhoneNumber = "1234567890",
+                Password = "Password123"
+            };
 
-            var result = await _controller.SignIn(registrationDto);
+            var result = await controller.SignIn(model);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
-            dynamic response = okResult.Value;
-            Assert.Equal("Registration successful, now you can login", response.message);
+            var returnValue = Assert.IsType<IdentityResult>(okResult.Value);
+            Assert.True(returnValue.Succeeded);
         }
 
         [Fact]

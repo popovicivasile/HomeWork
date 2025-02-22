@@ -50,8 +50,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddTransient<ISecurityRepository, SecurityRepository>();
+builder.Services.AddTransient<IAdminRepository, AdminRepository>();
+builder.Services.AddTransient<IBookingRepository, BookingRepository>();
+builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddTransient<JobFactory>();
-builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<SendAppointmentReminder>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

@@ -18,13 +18,13 @@ namespace HomeWork.Data.Repository.Real
         private readonly DentalDbContext _dbContext;
         private readonly UserManager<UserRegistration> _userManager;
         private readonly IConfiguration _config;
-        private readonly MailService _mailService;
+        private readonly IMailService _mailService;
 
         public BookingRepository(
             DentalDbContext dbContext,
             UserManager<UserRegistration> userManager,
             IConfiguration config,
-            MailService mailService)
+            IMailService mailService)
         {
             _dbContext = dbContext;
             _userManager = userManager;
@@ -125,45 +125,38 @@ namespace HomeWork.Data.Repository.Real
             return await query.ToListAsync();
         }
 
-        public async Task<List<BookingStatsDto>> GetBookingStatsAsync(string doctorId, DateTimeOffset startDate, DateTimeOffset endDate ,Guid procedureId)
+        public async Task<List<BookingStatsDto>> GetBookingStatsAsync(string doctorId, DateTimeOffset startDate, DateTimeOffset endDate, Guid procedureId)
         {
             List<BookingStatsDto> result = new List<BookingStatsDto>();
             try
             {
-                var query = await _dbContext.ProcedureRegistrationCards
-                .Include(prc => prc.Doctor)
-                .Include(prc => prc.Procedure)
-                .Where(s => s.Doctor.Id == doctorId && s.Procedure.Id == procedureId &&
-                s.AppointmentTime >= startDate && s.AppointmentTime <= endDate)
-                .GroupBy(s => new { s.DoctorId, s.ProcedureId }).ToListAsync();
+                var query = _dbContext.ProcedureRegistrationCards
+                    .Include(prc => prc.Doctor)
+                    .Include(prc => prc.Procedure)
+                    .Where(s => s.DoctorId == doctorId && s.ProcedureId == procedureId &&
+                                s.AppointmentTime >= startDate && s.AppointmentTime <= endDate)
+                    .ToListAsync();
 
-                if (query != null)
-                {
-                    result = query.Select(s => new BookingStatsDto
+                var grouped = (await query)
+                    .GroupBy(s => new { s.DoctorId, s.ProcedureId })
+                    .Select(g => new BookingStatsDto
                     {
-                        DoctorName = s.First().Doctor.FirstName + " " + s.First().Doctor.LastName,
-                        ProcedureName = s.First().Procedure.Name,
-                        AppointmentCount = s.Count(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed)),
-                        TotalDuration = s.Sum(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed) ? t.Procedure.DurationInMinutes : 0),
-                        CancelledCount = s.Count(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed)),
+                        DoctorName = g.First().Doctor.FirstName + " " + g.First().Doctor.LastName,
+                        ProcedureName = g.First().Procedure.Name,
+                        AppointmentCount = g.Count(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed)),
+                        TotalDuration = g.Sum(t => t.StatusId == Guid.Parse(RefStatusTypeList.Confirmed) ? t.Procedure.DurationInMinutes : 0),
+                        CancelledCount = g.Count(t => t.StatusId == Guid.Parse(RefStatusTypeList.Cancelled)),
                         PeriodStart = startDate,
-                        PeriodEnd = endDate,
-
+                        PeriodEnd = endDate
                     }).ToList();
 
-                }
-                else
-                {
-                    return result;
-                }
-
+                result = grouped.Any() ? grouped : result;
             }
             catch (Exception ex)
             {
                 throw new Exception($"Failed to get booking stats: {ex.Message}");
             }
             return result;
-
         }
 
         public async Task SendAppointmentRemindersAsync()
