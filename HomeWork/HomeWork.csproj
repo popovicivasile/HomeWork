@@ -29,4 +29,8 @@
     <ProjectReference Include="..\HomeWork.Models\HomeWork.Models.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Validation\" />
+  </ItemGroup>
+
 </Project>
