@@ -1,4 +1,5 @@
-﻿using HomeWork.Data.Domain;
+﻿using HomeWork.Core.RefStaticList;
+using HomeWork.Data.Domain;
 using HomeWork.Data.Domain.ValueObjects;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -29,18 +30,18 @@ namespace HomeWork.Data
             );
 
             modelBuilder.Entity<RefStatusType>().HasData(
-                new RefStatusType { Id = Guid.Parse("B87BDB63-8EFA-410D-9750-F3A61BF98796"), Name = "Confirmed" },
-                new RefStatusType { Id = Guid.Parse("64F98627-5932-4C00-B365-D36579AF5B9F"), Name = "Pending" },
-                new RefStatusType { Id = Guid.Parse("4023DB95-1762-4B3B-A9BA-8484586A42F2"), Name = "Cancelled" }
+                new RefStatusType { Id = Guid.Parse(RefStatusTypeList.Confirmed), Name = "Confirmed" },
+                new RefStatusType { Id = Guid.Parse(RefStatusTypeList.Pending), Name = "Pending" },
+                new RefStatusType { Id = Guid.Parse(RefStatusTypeList.Cancelled), Name = "Cancelled" }
                 );
 
 
             modelBuilder.Entity<RefDentalProcedures>().HasData(
-                new RefDentalProcedures { Id = Guid.Parse("D30941AE-B428-4C42-BA55-079678747851"), Name = "A", DurationInMinutes = 30 },
-                new RefDentalProcedures { Id = Guid.Parse("832081D0-5A02-492F-8AAB-785D9D4B36FC"), Name = "B", DurationInMinutes = 45 },
-                new RefDentalProcedures { Id = Guid.Parse("9B64EC7F-9B58-40E9-B910-6CD44953CEA4"), Name = "C", DurationInMinutes = 60 },
-                new RefDentalProcedures { Id = Guid.Parse("4E4DFF86-51DE-432D-822F-1845AD52772E"), Name = "D", DurationInMinutes = 20 },
-                new RefDentalProcedures { Id = Guid.Parse("80874D68-1511-4465-BD9F-CA08AA179933"), Name = "E", DurationInMinutes = 40 }
+                new RefDentalProcedures { Id = Guid.Parse(RefDentalProceduresList.A), Name = "A", DurationInMinutes = 30 },
+                new RefDentalProcedures { Id = Guid.Parse(RefDentalProceduresList.B), Name = "B", DurationInMinutes = 45 },
+                new RefDentalProcedures { Id = Guid.Parse(RefDentalProceduresList.C), Name = "C", DurationInMinutes = 60 },
+                new RefDentalProcedures { Id = Guid.Parse(RefDentalProceduresList.D), Name = "D", DurationInMinutes = 20 },
+                new RefDentalProcedures { Id = Guid.Parse(RefDentalProceduresList.E), Name = "E", DurationInMinutes = 40 }
             );
         }
 
